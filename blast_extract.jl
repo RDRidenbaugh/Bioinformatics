@@ -19,6 +19,7 @@
 
 # Currently functional in blast searches with nucleotide subject
 
+println("Initiating referenceIO function...")
 using JuliaDB
 function referenceIO(dir::AbstractString = ".") #DONE
 	global reference = Dict{String, Any}()
@@ -45,7 +46,9 @@ function referenceIO(dir::AbstractString = ".") #DONE
 	end
 	return reference
 end
+println("referenceIO function initiated!")
 
+println("Initiating blastIO function...")
 function blastIO(dir::AbstractString = ".") #DONE
 	global blast_out = Dict{String, IndexedTable}()
 	for file in readdir("$dir/blast_out")
@@ -57,7 +60,9 @@ function blastIO(dir::AbstractString = ".") #DONE
 	end
 	return blast_out
 end
+println("blastIO function initiated!")
 
+println("Initiating negative_sense function...")
 function negative_sense() #DONE
 	for key in keys(reference)
 		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1) # Rewrite so it works with multiple out and one db
@@ -79,7 +84,9 @@ function negative_sense() #DONE
 		end
 	end
 end
+println("negative_sense function initiated!")
 
+println("Initiating sseqid_merge function...")
 function sseqid_merge(n::Integer) #DONE
 	global sseqid_parse = Dict{String, Any}()
 	temp_counter = 0
@@ -147,7 +154,9 @@ function sseqid_merge(n::Integer) #DONE
 	end
 	return sseqid_parse
 end
+println("sseqid_merge function initiated!")
 
+println("Initiating parseIO function...")
 using IterTools
 function parseIO() #DONE
 	for file in keys(sseqid_parse)
@@ -163,6 +172,7 @@ function parseIO() #DONE
 		close(io)
 	end
 end
+println("parseIO function initiated!")
 
 referenceIO() #upload subject sequences
 println("referenceIO completed!")
