@@ -24,6 +24,7 @@ function referenceIO(dir::AbstractString = ".") #DONE
 	global reference = Dict{String, Any}()
 	for file in readdir("$dir/reference")
 		file_name = SubString(file, 1, Integer(findfirst('.', file))-1)
+		println("Starting referenceIO for $file_name")
 		temp_dict = Dict{String, String}()
 		temp_key = ""
 		temp_value = ""
@@ -49,6 +50,7 @@ function blastIO(dir::AbstractString = ".") #DONE
 	global blast_out = Dict{String, IndexedTable}()
 	for file in readdir("$dir/blast_out")
 		file_name = SubString(file, 1, Integer(findfirst('.', file))-1)
+		println("Starting blastIO for $file_name")
 		merge!(blast_out, Dict(file_name => loadtable("$dir/blast_out/$file", spacedelim = true, header_exists = false,
 			colnames = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])))
 		blast_out[file_name] = insertcols(blast_out[file_name], 1, :index => range(1, length(blast_out[file_name])))
@@ -58,7 +60,7 @@ end
 
 function negative_sense() #DONE
 	for key in keys(reference)
-		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)
+		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1) # Rewrite so it works with multiple out and one db
 		try
 			for i in range(1, length(blast_out["$key_bridge"*"_out"]))
 				if blast_out["$key_bridge"*"_out"][i][:sstart] > blast_out["$key_bridge"*"_out"][i][:send]
@@ -83,7 +85,7 @@ function sseqid_merge(n::Integer) #DONE
 	temp_counter = 0
 	for key in keys(reference)
 		temp_dict = Dict{String, Vector}()
-		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)
+		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1) # Rewrite so it works with multiple out and one db
 		for sid in Set(select(blast_out["$key_bridge"*"_out"], :sseqid))
 			temp_table_s = filter(val -> (val.sseqid == sid), blast_out["$key_bridge"*"_out"])
 			for qid in Set(select(blast_out["$key_bridge"*"_out"], :qseqid))
@@ -149,6 +151,7 @@ end
 using IterTools
 function parseIO() #DONE
 	for file in keys(sseqid_parse)
+		println("Parsing sequences for hits found in $file")
 		file_bridge = SubString(file, 1, Integer(findfirst('_', file))-1)
 		io = open("$file_bridge"*"_parsed.fa", "w")
 		for id in keys(sseqid_parse[file])
@@ -162,7 +165,11 @@ function parseIO() #DONE
 end
 
 referenceIO() #upload subject sequences
+println("referenceIO completed!")
 blastIO() #upload blast output
+println("blastIO completed!")
 negative_sense() #filter hits to ensure sstart < send
+println("Successfully filtered for negative sense hits!")
 sseqid_merge(2000) #merge hits within n basepairs and extract hits
+println("Successfully merged hits within the specified number of basepairs!")
 parseIO() #output extracted hits
