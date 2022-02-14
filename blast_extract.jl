@@ -19,6 +19,10 @@
 
 # Currently functional in blast searches with nucleotide subject
 
+# mutable struct placeholder
+# 	reference::Dict{String, Any}
+# end
+
 println("Initiating referenceIO function...")
 using JuliaDB
 function referenceIO(dir::AbstractString = ".") #DONE
@@ -64,23 +68,18 @@ println("blastIO function initiated!")
 
 println("Initiating negative_sense function...")
 function negative_sense() #DONE
-	for key in keys(reference)
-		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1) # Rewrite so it works with multiple out and one db
-		try
-			for i in range(1, length(blast_out["$key_bridge"*"_out"]))
-				if blast_out["$key_bridge"*"_out"][i][:sstart] > blast_out["$key_bridge"*"_out"][i][:send]
-					temp_table = table([i], [blast_out["$key_bridge"*"_out"][i][:qseqid]], [blast_out["$key_bridge"*"_out"][i][:sseqid]], [blast_out["$key_bridge"*"_out"][i][:pident]], 
-					[blast_out["$key_bridge"*"_out"][i][:length]], [blast_out["$key_bridge"*"_out"][i][:mismatch]], [blast_out["$key_bridge"*"_out"][i][:gapopen]], [blast_out["$key_bridge"*"_out"][i][:qstart]], 
-					[blast_out["$key_bridge"*"_out"][i][:qend]], [blast_out["$key_bridge"*"_out"][i][:send]], [blast_out["$key_bridge"*"_out"][i][:sstart]], [blast_out["$key_bridge"*"_out"][i][:evalue]], [blast_out["$key_bridge"*"_out"][i][:bitscore]],  
-					names = [:index, :qseqid, :sseqid, :pident, :length, :mismatch, :gapopen, :qstart, :qend, :sstart, :send, :evalue, :bitscore])
-					blast_out["$key_bridge"*"_out"] = merge(blast_out["$key_bridge"*"_out"], temp_table, pkey = :index)
-				else
-					continue
-				end
-				blast_out["$key_bridge"*"_out"] = filter(r -> r.sstart < r.send, blast_out["$key_bridge"*"_out"])
+	for key in keys(blast_out)
+		for i in range(1, length(blast_out["$key"]))
+			if blast_out["$key"][i][:sstart] > blast_out["$key"][i][:send]
+				temp_table = table([i], [blast_out["$key"][i][:qseqid]], [blast_out["$key"][i][:sseqid]], [blast_out["$key"][i][:pident]], 
+				[blast_out["$key"][i][:length]], [blast_out["$key"][i][:mismatch]], [blast_out["$key"][i][:gapopen]], [blast_out["$key"][i][:qstart]], 
+				[blast_out["$key"][i][:qend]], [blast_out["$key"][i][:send]], [blast_out["$key"][i][:sstart]], [blast_out["$key"][i][:evalue]], [blast_out["$key"][i][:bitscore]],  
+				names = [:index, :qseqid, :sseqid, :pident, :length, :mismatch, :gapopen, :qstart, :qend, :sstart, :send, :evalue, :bitscore])
+				blast_out["$key"] = merge(blast_out["$key"], temp_table, pkey = :index)
+			else
+				continue
 			end
-		catch
-			println("*** A corresponding output file was not found for $key.fasta ***")
+			blast_out["$key"] = filter(r -> r.sstart < r.send, blast_out["$key"])
 		end
 	end
 end
@@ -92,7 +91,7 @@ function sseqid_merge(n::Integer) #DONE
 	temp_counter = 0
 	for key in keys(reference)
 		temp_dict = Dict{String, Vector}()
-		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1) # Rewrite so it works with multiple out and one db
+		key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)
 		for sid in Set(select(blast_out["$key_bridge"*"_out"], :sseqid))
 			temp_table_s = filter(val -> (val.sseqid == sid), blast_out["$key_bridge"*"_out"])
 			for qid in Set(select(blast_out["$key_bridge"*"_out"], :qseqid))
