@@ -17,19 +17,22 @@
 # A argument can be added in the command line along with referenceIO(ARGS[1]) and blastIO(ARGS[1]) (ex. "julia blast_extract.jl YOUR_PATH/") if \
 # the blast_extract.jl file is located elsewhere
 
-# Currently functional in blast searches with nucleotide subject
+using Dates
+log = open(ARGS[1]*"/blast_extract.log", "w")
+println(log, "log file for blast_extract.jl - ", now())
 
-# mutable struct placeholder
-# 	reference::Dict{String, Any}
-# end
+function logIO(str::AbstractString)
+	println(log, str, now())
+	flush(log)
+end
 
-println("Initiating referenceIO function...")
 using JuliaDB
+logIO("Initiating referenceIO function - ")
 function referenceIO(dir::AbstractString = ".") #DONE
 	global reference = Dict{String, Any}()
 	for file in readdir("$dir/reference")
 		file_name = SubString(file, 1, Integer(findfirst('.', file))-1)
-		println("Starting referenceIO for $file_name")
+		logIO("Starting referenceIO for $file_name - ")
 		temp_dict = Dict{String, String}()
 		temp_key = ""
 		temp_value = ""
@@ -50,23 +53,23 @@ function referenceIO(dir::AbstractString = ".") #DONE
 	end
 	return reference
 end
-println("referenceIO function initiated!")
+logIO("referenceIO function initiated! - ")
 
-println("Initiating blastIO function...")
+logIO("Initiating blastIO function - ")
 function blastIO(dir::AbstractString = ".") #DONE
 	global blast_out = Dict{String, IndexedTable}()
 	for file in readdir("$dir/blast_out")
 		file_name = SubString(file, 1, Integer(findfirst('.', file))-1)
-		println("Starting blastIO for $file_name")
+		logIO("Starting blastIO for $file_name - ")
 		merge!(blast_out, Dict(file_name => loadtable("$dir/blast_out/$file", spacedelim = true, header_exists = false,
 			colnames = ["qseqid", "sseqid", "pident", "length", "mismatch", "gapopen", "qstart", "qend", "sstart", "send", "evalue", "bitscore"])))
 		blast_out[file_name] = insertcols(blast_out[file_name], 1, :index => range(1, length(blast_out[file_name])))
 	end
 	return blast_out
 end
-println("blastIO function initiated!")
+logIO("blastIO function initiated! - ")
 
-println("Initiating negative_sense function...")
+logIO("Initiating negative_sense function - ")
 function negative_sense() #DONE
 	for key in keys(blast_out)
 		for i in range(1, length(blast_out["$key"]))
@@ -83,9 +86,9 @@ function negative_sense() #DONE
 		end
 	end
 end
-println("negative_sense function initiated!")
+logIO("negative_sense function initiated! - ")
 
-println("Initiating sseqid_merge function...")
+logIO("Initiating sseqid_merge function - ")
 function sseqid_merge(n::Integer) #DONE
 	global sseqid_parse = Dict{String, Any}()
 	temp_counter = 0
@@ -153,13 +156,13 @@ function sseqid_merge(n::Integer) #DONE
 	end
 	return sseqid_parse
 end
-println("sseqid_merge function initiated!")
+logIO("sseqid_merge function initiated! - ")
 
-println("Initiating parseIO function...")
+logIO("Initiating parseIO function - ")
 using IterTools
 function parseIO() #DONE
 	for file in keys(sseqid_parse)
-		println("Parsing sequences for hits found in $file")
+		logIO("Parsing sequences for hits found in $file - ")
 		file_bridge = SubString(file, 1, Integer(findfirst('_', file))-1)
 		io = open("$file_bridge"*"_parsed.fa", "w")
 		for id in keys(sseqid_parse[file])
@@ -171,14 +174,15 @@ function parseIO() #DONE
 		close(io)
 	end
 end
-println("parseIO function initiated!")
+logIO("parseIO function initiated! - ")
 
-referenceIO() #upload subject sequences
-println("referenceIO completed!")
-blastIO() #upload blast output
-println("blastIO completed!")
+referenceIO(ARGS[1]) #upload subject sequences
+logIO("referenceIO completed! - ")
+blastIO(ARGS[1]) #upload blast output
+logIO("blastIO completed! - ")
 negative_sense() #filter hits to ensure sstart < send
-println("Successfully filtered for negative sense hits!")
+logIO("Successfully filtered for negative sense hits! - ")
 sseqid_merge(2000) #merge hits within n basepairs and extract hits
-println("Successfully merged hits within the specified number of basepairs!")
+logIO("Successfully merged hits within the specified number of basepairs! - ")
 parseIO() #output extracted hits
+close(log)
