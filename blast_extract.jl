@@ -9,16 +9,8 @@
 
 # INFO
 
-# This script was designed to extract and return query blast hits from a reference genome in a reciprocal blast annotation pipeline. \
-# Sequences are output in fasta format after optional filtering steps to handle negative sense hits (negative_sense()) \
-# and merge those within a specified number of basepairs (sseqid_merge(n)). 
+# Updated README to come..
 
-# referenceIO() and blastIO() default to the directory the blast_extract.jl script is located in ("."). \
-# A argument can be added in the command line along with referenceIO(ARGS[1]) and blastIO(ARGS[1]) (ex. "julia blast_extract.jl YOUR_PATH/") if \
-# the blast_extract.jl file is located elsewhere
-
-# log = open(ARGS[1]*"/blast_extract.log", "w")
-# println(log, "log file for blast_extract.jl - ", now())
 using Dates
 function logIO(str::AbstractString)
 	if @isdefined log
@@ -265,7 +257,6 @@ logIO("blastIO completed! - ")
 negative_sense() #filter hits to ensure sstart < send
 logIO("Successfully filtered for negative sense hits! - ")
 sseqid_merge(2000) #merge hits within n basepairs and extract hits
-println(sseqid_parse)
 logIO("Successfully merged hits within the specified number of basepairs! - ")
 parseIO() #output extracted hits
 close(log)
