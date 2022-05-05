@@ -1,14 +1,15 @@
-# v.1.1
+# v.1.2
+
+# CHANGE LOG
+# negativesense() function depreciated and merged into parseIO
 
 # REQUIRED FILE STRUCTURE
-
 # . 					
 # ├── /reference       	Directory containing blast search subject sequences in fasta format
 # ├── /blast_out       	Directory containing *_out.txt blast output in outfmt6 format
 # └── blast_extract.jl 	
 
 # INFO
-
 # Updated README to come..
 
 using Dates
@@ -71,25 +72,6 @@ function blastIO(dir::AbstractString = ".") #DONE
 	return blast_out
 end
 logIO("blastIO function initiated! - ")
-
-logIO("Initiating negative_sense function - ")
-function negative_sense() #DONE
-	for key in keys(blast_out)
-		for i in range(1, length(blast_out["$key"]))
-			if blast_out["$key"][i][:sstart] > blast_out["$key"][i][:send]
-				temp_table = table([i], [blast_out["$key"][i][:qseqid]], [blast_out["$key"][i][:sseqid]], [blast_out["$key"][i][:pident]], 
-				[blast_out["$key"][i][:length]], [blast_out["$key"][i][:mismatch]], [blast_out["$key"][i][:gapopen]], [blast_out["$key"][i][:qstart]], 
-				[blast_out["$key"][i][:qend]], [blast_out["$key"][i][:send]], [blast_out["$key"][i][:sstart]], [blast_out["$key"][i][:evalue]], [blast_out["$key"][i][:bitscore]],  
-				names = [:index, :qseqid, :sseqid, :pident, :length, :mismatch, :gapopen, :qstart, :qend, :sstart, :send, :evalue, :bitscore])
-				blast_out["$key"] = merge(blast_out["$key"], temp_table, pkey = :index)
-			else
-				continue
-			end
-			blast_out["$key"] = filter(r -> r.sstart < r.send, blast_out["$key"])
-		end
-	end
-end
-logIO("negative_sense function initiated! - ")
 
 logIO("Initiating sseqid_merge function - ")
 function sseqid_merge(n::Integer) #DONE
@@ -238,8 +220,15 @@ function parseIO() #DONE
 		for id in keys(sseqid_parse[file])
 			if findall(r"^Chromosome", id) === true
 				for (i, (sstart, send)) in enumerate(partition(sseqid_parse[file][id], 2, 2))
-					temp_substring = SubString(reference[file][id], sstart:send)
-					write(io, ">$id"*"_$i\n") + write(io, "$temp_substring\n")
+					if sstart > send
+						println("yes")
+						temp_substring = SubString(reference[file][id], send:sstart)
+						write(io, ">$id"*"_$i\n") + write(io, "$temp_substring\n")
+					else
+						println("no")
+						temp_substring = SubString(reference[file][id], sstart:send)
+						write(io, ">$id"*"_$i\n") + write(io, "$temp_substring\n")
+					end
 				end
 			else
 				continue
@@ -254,8 +243,6 @@ referenceIO(ARGS[1]) #upload subject sequences
 logIO("referenceIO completed! - ")
 blastIO(ARGS[1]) #upload blast output
 logIO("blastIO completed! - ")
-negative_sense() #filter hits to ensure sstart < send
-logIO("Successfully filtered for negative sense hits! - ")
 sseqid_merge(2000) #merge hits within n basepairs and extract hits
 logIO("Successfully merged hits within the specified number of basepairs! - ")
 parseIO() #output extracted hits
