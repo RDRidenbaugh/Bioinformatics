@@ -1,7 +1,8 @@
-# v.1.2
+# v.2.2
 
 # CHANGE LOG
-# negativesense() function depreciated and merged into parseIO
+# 2.0: negativesense() function depreciated and merged into parseIO
+# 2.1: Sequences won't parse
 
 # REQUIRED FILE STRUCTURE
 # . 					
@@ -74,14 +75,14 @@ end
 logIO("blastIO function initiated! - ")
 
 logIO("Initiating sseqid_merge function - ")
-function sseqid_merge(n::Integer) #DONE
+function sseqid_merge(base::Integer) #DONE
 	global sseqid_parse = Dict{String, Any}()
 	temp_counter = 0
 	if length(keys(reference)) == 1 #FOR ONE REFERENCE AND MULTIPLE BLAST_OUTS
 		for key in keys(reference)
 			for n in 1:length(keys(blast_out))
+				key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)		
 				temp_dict = Dict{String, Vector}()
-				key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)
 				for sid in Set(select(blast_out["$key_bridge"*"$n"*"_out"], :sseqid))
 					temp_table_s = filter(val -> (val.sseqid == sid), blast_out["$key_bridge"*"$n"*"_out"])
 					for qid in Set(select(blast_out["$key_bridge"*"$n"*"_out"], :qseqid))
@@ -94,7 +95,7 @@ function sseqid_merge(n::Integer) #DONE
 								append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_table_sq[1][:send]])
 							end
 						elseif length(temp_table_sq) == 2
-							if temp_table_sq[1][:send]+n >= temp_table_sq[2][:sstart]
+							if temp_table_sq[1][:send]+base >= temp_table_sq[2][:sstart]
 								if !haskey(temp_dict, sid)
 									merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[1][:sstart], temp_table_sq[2][:send]]))
 								else
@@ -107,16 +108,43 @@ function sseqid_merge(n::Integer) #DONE
 									append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_table_sq[1][:send]])
 								end
 							end
-						else
+						elseif length(temp_table_sq) > 2
 							temp_send = nothing
 							for i in range(1, length(temp_table_sq))
 								if i+1 > length(temp_table_sq)
-									append!(temp_dict[sid], [temp_table_sq[i][:sstart], temp_table_sq[i][:send]])
-									break
-								elseif temp_table_sq[i][:send]+n >= temp_table_sq[i+1][:sstart]
+									if temp_send === nothing
+										if !haskey(temp_dict, sid)
+											merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i][:sstart], temp_table_sq[i][:send]]))
+										else					
+											append!(temp_dict[sid], [temp_table_sq[i][:sstart], temp_table_sq[i][:send]])
+										end
+									else
+										if !haskey(temp_dict, sid)
+											try
+												merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i-temp_counter][:sstart], temp_table_sq[i][:send]]))
+												temp_send = nothing
+												temp_counter = 0
+											catch
+												merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i-temp_counter][:sstart], temp_table_sq[i][:send]]))
+												temp_send = nothing
+												temp_counter = 0
+											end
+										else
+											try
+												append!(temp_dict[sid], [temp_table_sq[i-temp_counter][:sstart], temp_send])
+												temp_send = nothing
+												temp_counter = 0
+											catch
+												append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_send])
+												temp_send = nothing
+												temp_counter = 0
+											end
+										end
+									end
+								elseif temp_table_sq[i][:send]+base >= temp_table_sq[i+1][:sstart]
 									temp_send = temp_table_sq[i+1][:send]
 									temp_counter += 1
-								elseif temp_table_sq[i][:send]+n < temp_table_sq[i+1][:sstart]
+								elseif temp_table_sq[i][:send]+base < temp_table_sq[i+1][:sstart]
 									if temp_send === nothing
 										if !haskey(temp_dict, sid)
 											merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i][:sstart], temp_table_sq[i][:send]]))
@@ -146,9 +174,9 @@ function sseqid_merge(n::Integer) #DONE
 		for key in keys(reference)
 			temp_dict = Dict{String, Vector}()
 			key_bridge = SubString(key, 1, Integer(findfirst('_', key))-1)
-			for sid in Set(select(blast_out["$key_bridge"*"_out"], :sseqid))
-				temp_table_s = filter(val -> (val.sseqid == sid), blast_out["$key_bridge"*"_out"])
-				for qid in Set(select(blast_out["$key_bridge"*"_out"], :qseqid))
+			for sid in Set(select(blast_out["$key_bridge"*"$n"*"_out"], :sseqid))
+				temp_table_s = filter(val -> (val.sseqid == sid), blast_out["$key_bridge"*"$n"*"_out"])
+				for qid in Set(select(blast_out["$key_bridge"*"$n"*"_out"], :qseqid))
 					temp_table_sq = filter(val -> (val.qseqid == qid), temp_table_s)
 					temp_table_sq = sort(temp_table_sq, :send)
 					if length(temp_table_sq) == 1
@@ -158,7 +186,7 @@ function sseqid_merge(n::Integer) #DONE
 							append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_table_sq[1][:send]])
 						end
 					elseif length(temp_table_sq) == 2
-						if temp_table_sq[1][:send]+n >= temp_table_sq[2][:sstart]
+						if temp_table_sq[1][:send]+base >= temp_table_sq[2][:sstart]
 							if !haskey(temp_dict, sid)
 								merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[1][:sstart], temp_table_sq[2][:send]]))
 							else
@@ -171,16 +199,44 @@ function sseqid_merge(n::Integer) #DONE
 								append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_table_sq[1][:send]])
 							end
 						end
-					else
+					elseif length(temp_table_sq) > 2
+						println(base)
 						temp_send = nothing
 						for i in range(1, length(temp_table_sq))
 							if i+1 > length(temp_table_sq)
-								append!(temp_dict[sid], [temp_table_sq[i][:sstart], temp_table_sq[i][:send]])
-								break
-							elseif temp_table_sq[i][:send]+n >= temp_table_sq[i+1][:sstart]
+								if temp_send === nothing
+									if !haskey(temp_dict, sid)
+										merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i][:sstart], temp_table_sq[i][:send]]))
+									else					
+										append!(temp_dict[sid], [temp_table_sq[i][:sstart], temp_table_sq[i][:send]])
+									end
+								else
+									if !haskey(temp_dict, sid)
+										try
+											merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i-temp_counter][:sstart], temp_table_sq[i][:send]]))
+											temp_send = nothing
+											temp_counter = 0
+										catch
+											merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i-temp_counter][:sstart], temp_table_sq[i][:send]]))
+											temp_send = nothing
+											temp_counter = 0
+										end
+									else
+										try
+											append!(temp_dict[sid], [temp_table_sq[i-temp_counter][:sstart], temp_send])
+											temp_send = nothing
+											temp_counter = 0
+										catch
+											append!(temp_dict[sid], [temp_table_sq[1][:sstart], temp_send])
+											temp_send = nothing
+											temp_counter = 0
+										end
+									end
+								end
+							elseif temp_table_sq[i][:send]+base >= temp_table_sq[i+1][:sstart]
 								temp_send = temp_table_sq[i+1][:send]
 								temp_counter += 1
-							elseif temp_table_sq[i][:send]+n < temp_table_sq[i+1][:sstart]
+							elseif temp_table_sq[i][:send]+base < temp_table_sq[i+1][:sstart]
 								if temp_send === nothing
 									if !haskey(temp_dict, sid)
 										merge!(temp_dict, Dict{String, Array}(sid => [temp_table_sq[i][:sstart], temp_table_sq[i][:send]]))
@@ -202,8 +258,8 @@ function sseqid_merge(n::Integer) #DONE
 						end
 					end
 				end
-				merge!(sseqid_parse, Dict(key => temp_dict))
 			end
+			merge!(sseqid_parse, Dict(key => temp_dict))
 		end
 	end
 	return sseqid_parse
@@ -218,14 +274,12 @@ function parseIO() #DONE
 		file_bridge = SubString(file, 1, Integer(findfirst('_', file))-1)
 		io = open("$file_bridge"*"_parsed.fa", "w")
 		for id in keys(sseqid_parse[file])
-			if findall(r"^Chromosome", id) === true
+			if match(r"^Chromosome", id) !== nothing
 				for (i, (sstart, send)) in enumerate(partition(sseqid_parse[file][id], 2, 2))
 					if sstart > send
-						println("yes")
 						temp_substring = SubString(reference[file][id], send:sstart)
 						write(io, ">$id"*"_$i\n") + write(io, "$temp_substring\n")
 					else
-						println("no")
 						temp_substring = SubString(reference[file][id], sstart:send)
 						write(io, ">$id"*"_$i\n") + write(io, "$temp_substring\n")
 					end
@@ -241,9 +295,12 @@ logIO("parseIO function initiated! - ")
 
 referenceIO(ARGS[1]) #upload subject sequences
 logIO("referenceIO completed! - ")
+println(log, reference["test_subject"]["Chromosome1"]) #sanity check # works
 blastIO(ARGS[1]) #upload blast output
 logIO("blastIO completed! - ")
-sseqid_merge(2000) #merge hits within n basepairs and extract hits
+println(log, blast_out["test1_out"][1]) #sanity check #works
+sseqid_merge(10) #merge hits within n basepairs and extract hits
 logIO("Successfully merged hits within the specified number of basepairs! - ")
+println(log, sseqid_parse["test_subject"]) #sanity check #Need nested dictionary for each blast out
 parseIO() #output extracted hits
 close(log)
