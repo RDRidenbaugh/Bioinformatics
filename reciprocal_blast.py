@@ -99,10 +99,6 @@ if 'out_a' not in locals():
         with open(base+"non_model/parsed/"+key+".fasta", "w") as parse_a:
             for id in parse[key]:
                 parse_a.write('%s%s' % (">"+id+"\n", nmodel_dict[">"+id]))
-            # for key, value in nmodel_dict.items():
-            #         with open(base+"model/parsed/"+sseqid+".fasta", "w") as f:
-            #             f.write('%s%s' % (key, value))
-            #         f.close()
 
 else:       
     print("Parsing functionality for interactive local mode coming soon")
