@@ -1,18 +1,27 @@
+#  Author: Ryan Ridenbaugh
+#  python v.3.8.10
+#  v.1.0
+
 # REQUIRED FILE STRUCTURE
-# . 					
+# . 					    Base Directory
 # ├── /model                Directory containing blast search subject sequences in fasta format
 # │     └──  query.fasta
+# │ 
 # ├── /non_model
-# │     └──  subject.fasta /db        
+# │     └──  subject.fasta        
+# │ 
 # ├── /blast_out       	    Directory containing *_out.txt blast output in outfmt6 format
+# │     ├──  initial/       model -> non_model
+# │     └──  reciprocal/    non_model -> model
+# │ 
 # └── reciprocal_blast.jl 	
 #
 # OPTIONAL FILES
+#   Control File (placed in the base directory) with makeblastdb and blast commands for cluster non-interactive functionality
 
 import os
 import sys
 import subprocess
-from re import findall
 
 argument = sys.argv[1]
 base = os.path.dirname(sys.argv[2])+"/"
