@@ -22,9 +22,9 @@ import sys
 argument = sys.argv[1]
 base = sys.argv[2]
 
-non_model_db = "makeblastdb -in "+base+"non_model/GCF_021901455.1_iyNeoLeco1.1_protein.fasta -dbtype prot -parse_seqids -out "+base+"non_model/db/nmodel_db"
-model_db = "makeblastdb -in "+base+"model/FlyBase.fasta -dbtype prot -parse_seqids -out "+base+"model/db/model_db"
-blastp = "blastp -query "+base+"model/FlyBase.fasta -db "+base+"non_model/db/nmodel_db -out "+base+"blast_out/initial/initial.txt -evalue 1e-10 -outfmt 6"
+non_model_db = "makeblastdb -in "+base+"non_model/GCF_021901455.1_iyNeoLeco1.1_protein.fasta -dbtype prot -parse_seqids -out "+base+"non_model/db/nmodel_db" #EDIT CMD FOR YOUR PROJECT
+model_db = "makeblastdb -in "+base+"model/FlyBase.fasta -dbtype prot -parse_seqids -out "+base+"model/db/model_db" #EDIT CMD FOR YOUR PROJECT
+blastp = "blastp -query "+base+"model/FlyBase.fasta -db "+base+"non_model/db/nmodel_db -out "+base+"blast_out/initial/initial.txt -evalue 1e-10 -outfmt 6" #EDIT CMD FOR YOUR PROJECT
 
 if argument == "-d":
     print("Generating databases..")
@@ -42,7 +42,7 @@ elif argument == "-p":
 parse = {}
 for filename in os.listdir(base+"blast_out/initial"):
     nmodel_dict = {}
-    with open(base+"non_model/GCF_021901455.1_iyNeoLeco1.1_protein.fasta", "r") as f: #EDIT
+    with open(base+"non_model/GCF_021901455.1_iyNeoLeco1.1_protein.fasta", "r") as f: #EDIT PATH FOR YOUR PROJECT
         temp_list = []
         for line in f.readlines():
             if line.startswith('>'):
@@ -67,5 +67,4 @@ for key in parse.keys():
         for id in parse[key]:
             parse_a.write('%s%s' % (">"+id+"\n", nmodel_dict[">"+id]))
 for filename in os.listdir(base+"non_model/parsed/"):
-        os.system("blastp -query "+base+"non_model/parsed/"+filename+" -db "+base+"model/db/model_db -out "+base+"blast_out/reciprocal/"+filename+".txt -evalue 1e-10 -outfmt 6")
-
+        os.system("blastp -query "+base+"non_model/parsed/"+filename+" -db "+base+"model/db/model_db -out "+base+"blast_out/reciprocal/"+filename+".txt -evalue 1e-10 -outfmt 6") #EDIT CMD FOR YOUR PROJECT
