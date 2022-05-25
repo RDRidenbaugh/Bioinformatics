@@ -34,6 +34,7 @@ elif argument == "-dp":
     print("Generating databases and running BLAST+ for the initial search..")
     os.system(non_model_db)
     os.system(model_db)
+    print("Running the initial BLAST+ search..")
     os.system(blastp)
 elif argument == "-p":
     print("Running the initial BLAST+ search..")
