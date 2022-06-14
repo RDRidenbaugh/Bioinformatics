@@ -1,4 +1,7 @@
-# v.0
+# v.1.0
+# Author: Ryan Ridenbaugh
+# Date: 06/13/2022
+# Python v. 3.8.10
 
 import os
 
@@ -87,5 +90,3 @@ def transcript_extract(path,out):
         
 transcipt_loc("../transcripts/mechano_transcripts.txt", "../GCF_021901455.1_iyNeoLeco1.1_genomic.gff")
 transcript_extract("../reference/", "../transcripts/")
-# print(XMid.keys())
-# print(genome.keys())
