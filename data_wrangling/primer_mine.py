@@ -178,7 +178,7 @@ def pairwise(key, n):
     else:
         return False
 
-print('Initializing function "OG_aflp"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+print('Initializing function "OG_lp"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def OG_lp(dict, n):
     temp_dict_a = {}
     temp_dict_b = {}
@@ -191,14 +191,58 @@ def OG_lp(dict, n):
             continue
     return temp_dict_a, temp_dict_b
 
-print('Running function "OG_aflp" for OG_names', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-output = OG_lp(OG_names, 66)
-print('Function "OG_aflp" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+print('Running function "OG_lp" for OG_names', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+output = OG_lp(OG_names, 67)
+print('Function "OG_lp" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
-# ('LOC124212308', 'XM_046612198.1', 'XP_046468154.1', 419, 1260, '2', 'uncharacterized protein LOC124212308')
-def meta_output(dict):
-    with open("../length_polymorphism.txt", "w") as f:
-        pass
+print('Initializing function "lp_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+def lp_output(dict, path):
+    with open(path, "w") as f:
+        f.write("ortho_group\tpinetum_xm\tlecontei_xm\tvirginianus_xm\tfabricii_xm\tsimilis_xm\tpinetum_len\tlecontei_len\tvirginianus_len\tfabricii_len\tsimilis_len\tproduct\n")
+        for key in dict.keys():
+                f.write(key+"\t"+pine_db[dict[key][0]][1]+"\t"+leco_db[dict[key][1]][1]+"\t"+virg_db[dict[key][2]][1]+"\t"+ fabr_db[dict[key][3]][1]+"\t"+simi_db[dict[key][4]][1]+"\t")
+                f.write(str(pine_db[dict[key][0]][3])+"\t"+str(leco_db[dict[key][1]][3])+"\t"+str(virg_db[dict[key][2]][3])+"\t"+str(fabr_db[dict[key][3]][3])+"\t"+str(simi_db[dict[key][4]][3])+"\t"+pine_db[dict[key][0]][6]+"\n")
+    f.close()
 
-def XP_to_XM(dict):
-    pass
+print('Initializing function "pa_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+def pa_output(dict, path):
+    with open(path, "w") as f:
+        f.write("ortho_group\tpinetum_xp\tlecontei_xp\tvirginianus_xp\tfabricii_xp\tsimilis_xp\tproduct\n")
+        for key in dict.keys():
+            f.write(key+"\t")
+            if dict[key][0] != "NA":
+                f.write(pine_db[dict[key][0]][1]+"\t")
+            else:
+                f.write("NA\t")
+            if dict[key][1] != "NA":
+                f.write(leco_db[dict[key][1]][1]+"\t")
+            else:
+                f.write("NA\t")
+            if dict[key][2] != "NA":
+                f.write(virg_db[dict[key][2]][1]+"\t")
+            else:
+                f.write("NA\t")
+            if dict[key][3] != "NA":
+                f.write(fabr_db[dict[key][3]][1]+"\t")
+            else:
+                f.write("NA\t")
+            if dict[key][4] != "NA":
+                f.write(simi_db[dict[key][4]][1]+"\t")
+            else:
+                f.write("NA\t")
+            if dict[key][0] != "NA":
+                f.write(pine_db[dict[key][0]][6]+"\n")
+            elif dict[key][1] != "NA":
+                f.write(leco_db[dict[key][1]][6]+"\n")
+            elif dict[key][2] != "NA":
+                f.write(virg_db[dict[key][2]][6]+"\n")
+            elif dict[key][3] != "NA":
+                f.write(fabr_db[dict[key][3]][6]+"\n")
+            elif dict[key][4] != "NA":
+                f.write(simi_db[dict[key][4]][6]+"\n")
+        f.close()
+
+print('Outputting data using function "lp_output" and "pa_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+lp_output(output[1], "../length_polymorphism.txt")
+pa_output(output[0], "../presence_polymorphism.txt")
+print('Function "lp_output" and "pa_output" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
