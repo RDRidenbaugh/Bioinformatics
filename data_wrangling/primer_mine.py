@@ -1,3 +1,4 @@
+from operator import length_hint
 from re import split, findall, sub
 from time import strftime, localtime
 
@@ -114,16 +115,14 @@ def build_db_exon(path, feature):
                     temp_len = abs(int(temp_start)-int(sublist[0]))
                     temp_list_intron.append(temp_len)
             XM_dict[key] = [temp_list_exon, temp_list_intron]
-    # print(XM_dict["XM_046611274.1"]) [[19, 454, 118, 196, 148, 240, 120, 273, 257, 1134], [9831, 3487, 1246, 455, 806, 1067, 477, 598, 1637]]
-    # print(XM_dict["XM_046611268.1"]) [[379, 454, 118, 196, 148, 240, 120, 273, 257, 1134], [6734, 3487, 1246, 455, 806, 1067, 477, 598, 1637]]
     return XM_dict
 
 print('Running function "build_db_exon" for the five genomes', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-pine_db_exon = build_db_exon("../genome_gff/GCF_021155775.1_iyNeoPine1.1_genomic.gff", "exon")
-leco_db_exon = build_db_exon("../genome_gff/GCF_021901455.1_iyNeoLeco1.1_genomic.gff", "exon")
-virg_db_exon = build_db_exon("../genome_gff/GCF_021901495.1_iyNeoVirg1.1_genomic.gff", "exon")
-fabr_db_exon = build_db_exon("../genome_gff/GCF_021155785.1_iyNeoFabr1.1_genomic.gff", "exon")
-simi_db_exon = build_db_exon("../genome_gff/GCF_021155765.1_iyDipSimi1.1_genomic.gff", "exon")
+pine_db_exon = build_db_exon("../genome_gff/GCF_021155775.1_iyNeoPine1.1_genomic.gff", "CDS")
+leco_db_exon = build_db_exon("../genome_gff/GCF_021901455.1_iyNeoLeco1.1_genomic.gff", "CDS")
+virg_db_exon = build_db_exon("../genome_gff/GCF_021901495.1_iyNeoVirg1.1_genomic.gff", "CDS")
+fabr_db_exon = build_db_exon("../genome_gff/GCF_021155785.1_iyNeoFabr1.1_genomic.gff", "CDS")
+simi_db_exon = build_db_exon("../genome_gff/GCF_021155765.1_iyDipSimi1.1_genomic.gff", "CDS")
 print('Function "build_db_exon" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
 print('Initializing function "longest"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
@@ -213,8 +212,62 @@ print('Running function "OG_filter" for OG_names', strftime("%Y-%m-%d %I:%M:%S %
 OG_names = OG_filter(OG_names)
 print('Function "OG_filter" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
+# print(OG_names["OG_6060"])
+# ('XP_046478001.1', 'XP_015516461.1', 'XP_046629894.1', 'XP_046409836.1', 'XP_046749496.1')
+# print(pine_db_exon['XP_046478001.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
+# print(leco_db_exon['XP_015516461.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
+# print(virg_db_exon['XP_046629894.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
+# print(fabr_db_exon['XP_046409836.1']) [[35,  148, 184, 171, 221, 156, 258], [322, 79, 248, 80, 512, 199]]
+# print(simi_db_exon['XP_046749496.1']) [[143, 148, 184, 171, 221, 156, 258], [104, 78, 246, 81, 784, 199]]
+
+# File "primer_mine.py", line 224, in pairwise_intron
+# if len(pine_db_exon[key[0]][1]) == len(leco_db_exon[key[1]][1]) == len(virg_db_exon[key[2]][1]) == len(fabr_db_exon[key[3]][1]) == len(simi_db_exon[key[4]][1]):
+# IndexError: list index out of range
+def pairwise_intron(key, dif, mode):
+    try:
+        if len(pine_db_exon[key[0]][1]) == len(leco_db_exon[key[1]][1]) == len(virg_db_exon[key[2]][1]) == len(fabr_db_exon[key[3]][1]) == len(simi_db_exon[key[4]][1]):
+            if mode == "pl":
+                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
+                    if abs(int(p)-int(l)) > dif:
+                        return True
+            elif mode == "all":
+                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
+                    if abs(int(p)-int(l)) > dif:
+                        return True
+                for p, v in zip(pine_db_exon[key[0]][1], virg_db_exon[key[2]][1]):
+                    if abs(int(p)-int(v)) > dif:
+                        return True
+                for p, f in zip(pine_db_exon[key[0]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(p)-int(f)) > dif:
+                        return True
+                for p, s in zip(pine_db_exon[key[0]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(p)-int(s)) > dif:
+                        return True
+                for l, v in zip(leco_db_exon[key[1]][1], virg_db_exon[key[2]][1]):
+                    if abs(int(l)-int(v)) > dif:
+                        return True
+                for l, f in zip(leco_db_exon[key[1]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(l)-int(f)) > dif:
+                        return True
+                for l, s in zip(leco_db_exon[key[1]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(l)-int(s)) > dif:
+                        return True
+                for v, f in zip(virg_db_exon[key[2]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(v)-int(f)) > dif:
+                        return True
+                for v, s in zip(virg_db_exon[key[2]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(v)-int(s)) > dif:
+                        return True
+                for f, s in zip(fabr_db_exon[key[3]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(f)-int(s)) > dif:
+                        return True
+        else:
+            return False
+    except: 
+        return False
+
 print('Initializing function "pairwise"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-def pairwise(key, dif):
+def pairwise_lp(key, dif):
     for i, o in enumerate(key):
         if i == 0:
             pine = int(pine_db_ft[o][3])
@@ -238,15 +291,28 @@ def OG_lp(dict, dif):
     for key in dict.keys():
         if dict[key][0] == "NA" or dict[key][1] == "NA" or dict[key][2] == "NA" or dict[key][3] == "NA" or dict[key][4] == "NA":
             temp_dict_a[key] = dict[key]
-        elif pairwise(dict[key], dif):
+        elif pairwise_lp(dict[key], dif):
             temp_dict_b[key] = dict[key]
         else: 
             continue
     return temp_dict_a, temp_dict_b
 
+def OG_intron(dict, dif):
+    temp_dict = {}
+    for key in dict.keys():
+        if dict[key][0] == "NA" or dict[key][1] == "NA" or dict[key][2] == "NA" or dict[key][3] == "NA" or dict[key][4] == "NA": 
+            continue
+        elif pairwise_intron(dict[key], dif, "pl"):
+            temp_dict[key] = ([dict[key][0], pine_db_exon[dict[key][0]][1]], [dict[key][1],leco_db_exon[dict[key][1]][1]], [dict[key][2], virg_db_exon[dict[key][2]][1]], [dict[key][3], fabr_db_exon[dict[key][3]][1]], [dict[key][4], simi_db_exon[dict[key][4]][1]])
+        else:
+            continue
+    return temp_dict
+
 print('Running function "OG_lp" for OG_names', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-output = OG_lp(OG_names, 100)
+output_lp = OG_lp(OG_names, 100)
 print('Function "OG_lp" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+
+intron = OG_intron(OG_names, 100)
 
 print('Initializing function "lp_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def lp_output(dict, path):
@@ -300,7 +366,47 @@ def pa_output(dict, path):
                 f.write(simi_db_ft[dict[key][4]][6]+"\n")
         f.close()
 
+# (['XP_046479184.1', [194, 460, 498, 613, 526, 544]], ['XP_015520731.1', [82, 211, 124, 241, 90, 184]], ['XP_046617412.1', [82, 212, 124, 241, 90, 184]], ['XP_046423743.1', [82, 212, 124, 241, 90, 184]], ['XP_046740947.1', [202, 471, 496, 513, 526, 543]])
+# ('LOC124217503', 'XM_046623228.1', 'XP_046479184.1', 346, 1041, '4', 'DNA-directed RNA polymerases I and III subunit RPAC1')
+def intron_output(dict, path):
+    for key in dict:
+        with open(path+key+".txt", "w") as f:
+            f.write("# "+key+"\t"+pine_db_ft[dict[key][0][0]][0]+"\t"+pine_db_ft[dict[key][0][0]][-1]+"\n")
+            f.write("pine"+"\t"+dict[key][0][0]+"\t")
+            length = len(dict[key][0][1])
+            for i, p in enumerate(dict[key][0][1]):
+                if i < length-1:
+                    f.write(str(p)+"\t")
+                else:
+                    f.write(str(p)+"\n")
+            f.write("leco"+"\t"+dict[key][1][0]+"\t")
+            for i, l in enumerate(dict[key][1][1]):
+                if i < length-1:
+                    f.write(str(l)+"\t")
+                else:
+                    f.write(str(l)+"\n")
+            f.write("virg"+"\t"+dict[key][2][0]+"\t")
+            for i, v in enumerate(dict[key][2][1]):
+                if i < length-1:
+                    f.write(str(v)+"\t")
+                else:
+                    f.write(str(v)+"\n")
+            f.write("fabr"+"\t"+dict[key][3][0]+"\t")
+            for i, fa in enumerate(dict[key][3][1]):
+                if i < length-1:
+                    f.write(str(fa)+"\t")
+                else:
+                    f.write(str(fa)+"\n")
+            f.write("simi"+"\t"+dict[key][4][0]+"\t")
+            for i, s in enumerate(dict[key][4][1]):
+                if i < length-1:
+                    f.write(str(s)+"\t")
+                else:
+                    f.write(str(s)+"\n")
+            
 print('Outputting data using function "lp_output" and "pa_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-lp_output(output[1], "../length_polymorphism.txt")
-pa_output(output[0], "../presence_polymorphism.txt")
+lp_output(output_lp[1], "../length_polymorphism.txt")
+pa_output(output_lp[0], "../presence_polymorphism.txt")
 print('Function "lp_output" and "pa_output" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+
+intron_output(intron, "../intron_out/")
