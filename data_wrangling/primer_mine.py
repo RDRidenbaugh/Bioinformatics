@@ -1,4 +1,3 @@
-from operator import length_hint
 from re import split, findall, sub
 from time import strftime, localtime
 
@@ -13,11 +12,7 @@ def name(protein_names):
             else:
                 temp_split = line.split("\t")
                 total_split = line.replace("\t", " ").split(" ")
-                t = len(total_split)-1
                 temp_value = []
-                # if t >= n:
-                #     continue
-                # else:
                 if temp_split[1] == '':
                     temp_value = [["NA"]]
                 elif len(temp_split[1]) == 14:
@@ -212,61 +207,7 @@ print('Running function "OG_filter" for OG_names', strftime("%Y-%m-%d %I:%M:%S %
 OG_names = OG_filter(OG_names)
 print('Function "OG_filter" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
-# print(OG_names["OG_6060"])
-# ('XP_046478001.1', 'XP_015516461.1', 'XP_046629894.1', 'XP_046409836.1', 'XP_046749496.1')
-# print(pine_db_exon['XP_046478001.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
-# print(leco_db_exon['XP_015516461.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
-# print(virg_db_exon['XP_046629894.1']) [[143, 148, 184, 171, 221, 156, 258], [366, 79, 248, 80, 512, 199]]
-# print(fabr_db_exon['XP_046409836.1']) [[35,  148, 184, 171, 221, 156, 258], [322, 79, 248, 80, 512, 199]]
-# print(simi_db_exon['XP_046749496.1']) [[143, 148, 184, 171, 221, 156, 258], [104, 78, 246, 81, 784, 199]]
-
-# File "primer_mine.py", line 224, in pairwise_intron
-# if len(pine_db_exon[key[0]][1]) == len(leco_db_exon[key[1]][1]) == len(virg_db_exon[key[2]][1]) == len(fabr_db_exon[key[3]][1]) == len(simi_db_exon[key[4]][1]):
-# IndexError: list index out of range
-def pairwise_intron(key, dif, mode):
-    try:
-        if len(pine_db_exon[key[0]][1]) == len(leco_db_exon[key[1]][1]) == len(virg_db_exon[key[2]][1]) == len(fabr_db_exon[key[3]][1]) == len(simi_db_exon[key[4]][1]):
-            if mode == "pl":
-                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
-                    if abs(int(p)-int(l)) > dif:
-                        return True
-            elif mode == "all":
-                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
-                    if abs(int(p)-int(l)) > dif:
-                        return True
-                for p, v in zip(pine_db_exon[key[0]][1], virg_db_exon[key[2]][1]):
-                    if abs(int(p)-int(v)) > dif:
-                        return True
-                for p, f in zip(pine_db_exon[key[0]][1], fabr_db_exon[key[3]][1]):
-                    if abs(int(p)-int(f)) > dif:
-                        return True
-                for p, s in zip(pine_db_exon[key[0]][1], simi_db_exon[key[4]][1]):
-                    if abs(int(p)-int(s)) > dif:
-                        return True
-                for l, v in zip(leco_db_exon[key[1]][1], virg_db_exon[key[2]][1]):
-                    if abs(int(l)-int(v)) > dif:
-                        return True
-                for l, f in zip(leco_db_exon[key[1]][1], fabr_db_exon[key[3]][1]):
-                    if abs(int(l)-int(f)) > dif:
-                        return True
-                for l, s in zip(leco_db_exon[key[1]][1], simi_db_exon[key[4]][1]):
-                    if abs(int(l)-int(s)) > dif:
-                        return True
-                for v, f in zip(virg_db_exon[key[2]][1], fabr_db_exon[key[3]][1]):
-                    if abs(int(v)-int(f)) > dif:
-                        return True
-                for v, s in zip(virg_db_exon[key[2]][1], simi_db_exon[key[4]][1]):
-                    if abs(int(v)-int(s)) > dif:
-                        return True
-                for f, s in zip(fabr_db_exon[key[3]][1], simi_db_exon[key[4]][1]):
-                    if abs(int(f)-int(s)) > dif:
-                        return True
-        else:
-            return False
-    except: 
-        return False
-
-print('Initializing function "pairwise"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+print('Initializing function "pairwise_lp"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def pairwise_lp(key, dif):
     for i, o in enumerate(key):
         if i == 0:
@@ -284,6 +225,61 @@ def pairwise_lp(key, dif):
     else:
         return False
 
+print('Initializing function "pairwise_intron"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+def pairwise_intron(key, dif, mode):
+    try:
+        if len(pine_db_exon[key[0]][1]) == len(leco_db_exon[key[1]][1]) == len(virg_db_exon[key[2]][1]) == len(fabr_db_exon[key[3]][1]) == len(simi_db_exon[key[4]][1]):
+            if mode == "pl":
+                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
+                    if abs(int(p)-int(l)) > dif:
+                        if p < 1100 and l < 1100:
+                            return True
+            elif mode == "all":
+                for p, l in zip(pine_db_exon[key[0]][1], leco_db_exon[key[1]][1]):
+                    if abs(int(p)-int(l)) > dif:
+                        if p < 1100 and l < 1100:
+                            return True
+                for p, v in zip(pine_db_exon[key[0]][1], virg_db_exon[key[2]][1]):
+                    if abs(int(p)-int(v)) > dif:
+                        if p < 1100 and v < 1100:
+                            return True
+                for p, f in zip(pine_db_exon[key[0]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(p)-int(f)) > dif:
+                        if p < 1100 and f < 1100:
+                            return True
+                for p, s in zip(pine_db_exon[key[0]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(p)-int(s)) > dif:
+                        if p < 1100 and s < 1100:
+                            return True
+                for l, v in zip(leco_db_exon[key[1]][1], virg_db_exon[key[2]][1]):
+                    if abs(int(l)-int(v)) > dif:
+                        if l < 1100 and v < 1100:
+                            return True
+                for l, f in zip(leco_db_exon[key[1]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(l)-int(f)) > dif:
+                        if l < 1100 and f < 1100:
+                            return True
+                for l, s in zip(leco_db_exon[key[1]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(l)-int(s)) > dif:
+                        if l < 1100 and s < 1100:
+                            return True
+                for v, f in zip(virg_db_exon[key[2]][1], fabr_db_exon[key[3]][1]):
+                    if abs(int(v)-int(f)) > dif:
+                        if v < 1100 and f < 1100:
+                            return True
+                for v, s in zip(virg_db_exon[key[2]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(v)-int(s)) > dif:
+                        if v < 1100 and s < 1100:
+                            return True
+                for f, s in zip(fabr_db_exon[key[3]][1], simi_db_exon[key[4]][1]):
+                    if abs(int(f)-int(s)) > dif:
+                        if f < 1100 and s < 1100:
+                            return True
+        else:
+            return False
+    except: 
+        return False
+
 print('Initializing function "OG_lp"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def OG_lp(dict, dif):
     temp_dict_a = {}
@@ -297,6 +293,7 @@ def OG_lp(dict, dif):
             continue
     return temp_dict_a, temp_dict_b
 
+print('Initializing function "OG_intron"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def OG_intron(dict, dif):
     temp_dict = {}
     for key in dict.keys():
@@ -312,7 +309,9 @@ print('Running function "OG_lp" for OG_names', strftime("%Y-%m-%d %I:%M:%S %p", 
 output_lp = OG_lp(OG_names, 100)
 print('Function "OG_lp" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
+print('Running function "OG_intron" for OG_names', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 intron = OG_intron(OG_names, 100)
+print('Function "OG_intron" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
 print('Initializing function "lp_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def lp_output(dict, path):
@@ -366,8 +365,7 @@ def pa_output(dict, path):
                 f.write(simi_db_ft[dict[key][4]][6]+"\n")
         f.close()
 
-# (['XP_046479184.1', [194, 460, 498, 613, 526, 544]], ['XP_015520731.1', [82, 211, 124, 241, 90, 184]], ['XP_046617412.1', [82, 212, 124, 241, 90, 184]], ['XP_046423743.1', [82, 212, 124, 241, 90, 184]], ['XP_046740947.1', [202, 471, 496, 513, 526, 543]])
-# ('LOC124217503', 'XM_046623228.1', 'XP_046479184.1', 346, 1041, '4', 'DNA-directed RNA polymerases I and III subunit RPAC1')
+print('Initializing function "intron_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 def intron_output(dict, path):
     for key in dict:
         with open(path+key+".txt", "w") as f:
@@ -403,10 +401,14 @@ def intron_output(dict, path):
                     f.write(str(s)+"\t")
                 else:
                     f.write(str(s)+"\n")
-            
+        f.close()
+
 print('Outputting data using function "lp_output" and "pa_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 lp_output(output_lp[1], "../length_polymorphism.txt")
 pa_output(output_lp[0], "../presence_polymorphism.txt")
 print('Function "lp_output" and "pa_output" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
+print('Outputting data using function "intron_output"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 intron_output(intron, "../intron_out/")
+print('Function "intron_output" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
+print('primer_mine.py complete!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
