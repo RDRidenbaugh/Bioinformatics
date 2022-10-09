@@ -1,4 +1,4 @@
-from re import split, findall, sub
+from re import split, findall
 from time import strftime, localtime
 
 print('Initializing function "name"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
@@ -75,42 +75,60 @@ simi_db_ft = build_db_ft("../feature_table/GCF_021155765.1_iyDipSimi1.1_feature_
 print('Function "build_db_ft" executed!', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 
 print('Initializing function "build_db_exon"', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
-def build_db_exon(path, feature):
-    XM_dict = {}
+def build_db_exon(path, feature): #error in processing negative strand
+    XP_dict = {}
     with open(path, "r") as f:
         for line in f.readlines():
             if findall(feature, line) and not findall("partial=true", line):
                 temp_split = line.strip("\n").split("\t")
                 meta_split = split(r'[;=]',temp_split[-1])
-                if meta_split[-1] not in XM_dict:
-                    XM_dict[meta_split[-1]] = [[temp_split[3], temp_split[4]]]
+                if meta_split[-1] not in XP_dict:
+                    XP_dict[meta_split[-1]] = [temp_split[6], [[temp_split[3], temp_split[4]]]]
                 else:
-                    XM_dict[meta_split[-1]].append([temp_split[3], temp_split[4]])
+                    if XP_dict[meta_split[-1]][0] == "+":
+                        XP_dict[meta_split[-1]][1].append([temp_split[3], temp_split[4]])
+                    else:
+                        XP_dict[meta_split[-1]][1].insert(0, [temp_split[3], temp_split[4]])
     f.close()
-    for key in XM_dict.keys():
-        exon_list = XM_dict[key]
+    for key in XP_dict.keys():
+        exon_list = XP_dict[key][-1]
         exon_len = len(exon_list)
         if exon_len == 1:
             temp_list_exon = [abs(int(exon_list[0][1])-int(exon_list[0][0]))+1]
-            XM_dict[key] = temp_list_exon
+            XP_dict[key] = temp_list_exon
         else:
             temp_list_exon = []
             temp_list_intron = []
-            for sublist in exon_list:
-                temp_len = abs(int(sublist[1])-int(sublist[0]))+1
-                temp_list_exon.append(temp_len)
-            for i, sublist in enumerate(exon_list):
-                if i == 0:
-                    temp_start = sublist[1]
-                elif i < exon_len-1 and i != 0:
-                    temp_len = abs(int(temp_start)-int(sublist[0]))
-                    temp_list_intron.append(temp_len)
-                    temp_start = sublist[1]
-                else:
-                    temp_len = abs(int(temp_start)-int(sublist[0]))
-                    temp_list_intron.append(temp_len)
-            XM_dict[key] = [temp_list_exon, temp_list_intron]
-    return XM_dict
+            if XP_dict[key][0] == "+":
+                for sublist in exon_list:
+                    temp_len = abs(int(sublist[1])-int(sublist[0]))+1
+                    temp_list_exon.append(temp_len)
+                for i, sublist in enumerate(exon_list):
+                    if i == 0:
+                        temp_start = sublist[1]
+                    elif i < exon_len-1 and i != 0:
+                        temp_len = abs(int(temp_start)-int(sublist[0]))
+                        temp_list_intron.append(temp_len)
+                        temp_start = sublist[1]
+                    else:
+                        temp_len = abs(int(temp_start)-int(sublist[0]))
+                        temp_list_intron.append(temp_len)
+            else:
+                for sublist in exon_list:
+                    temp_len = abs(int(sublist[1])-int(sublist[0]))+1
+                    temp_list_exon.insert(0, temp_len)
+                for i, sublist in enumerate(exon_list):
+                    if i == 0:
+                        temp_start = sublist[1]
+                    elif i < exon_len-1 and i != 0:
+                        temp_len = abs(int(temp_start)-int(sublist[0]))
+                        temp_list_intron.insert(0, temp_len)
+                        temp_start = sublist[1]
+                    else:
+                        temp_len = abs(int(temp_start)-int(sublist[0]))
+                        temp_list_intron.insert(0, temp_len)
+            XP_dict[key] = [temp_list_exon, temp_list_intron]
+    return XP_dict
 
 print('Running function "build_db_exon" for the five genomes', strftime("%Y-%m-%d %I:%M:%S %p", localtime()))
 pine_db_exon = build_db_exon("../genome_gff/GCF_021155775.1_iyNeoPine1.1_genomic.gff", "CDS")
